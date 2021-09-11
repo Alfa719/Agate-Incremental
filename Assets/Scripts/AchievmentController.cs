@@ -1,0 +1,73 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class AchievmentController : MonoBehaviour
+{
+    // Buat instansi class
+    private static AchievmentController _instance = null;
+    public static AchievmentController Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindObjectOfType<AchievmentController>();
+            }
+            return _instance;
+        }
+    }
+    [SerializeField] private Transform _popUpTransform;
+    [SerializeField] private Text _popUpText;
+    [SerializeField] private float _popUpShowDuration = 3f;
+    [SerializeField] private List<AchievementData> _achievementList;
+    private float _popUpShowDurationCounter;
+    public AudioSource achievementSound;
+    private void Start()
+    {
+        achievementSound = GameObject.Find("Achievement Sound").GetComponent<AudioSource>();
+    }
+    private void Update()
+    {
+        if (_popUpShowDurationCounter > 0)
+        {
+            // Kurangi durasi ketika pop up durasi lebih dari 0
+            _popUpShowDurationCounter -= Time.unscaledDeltaTime;
+            // Lerp adalah fungsi linear interpolation, digunakan untuk mengubah value secara perlahan
+            _popUpTransform.localScale = Vector3.LerpUnclamped(_popUpTransform.localScale, Vector3.one, 0.5f);
+        }
+        else
+        {
+            _popUpTransform.localScale = Vector2.LerpUnclamped(_popUpTransform.localScale, Vector3.right, 0.5f);
+        }
+    }
+    public void UnlockAchievement(AchievementType type, string value)
+    {
+        // Mencari data achievement
+        AchievementData achievement = _achievementList.Find(a => a.Type == type && a.Value == value);
+        if (achievement != null && !achievement.IsUnlocked)
+        {       
+            achievement.IsUnlocked = true;
+            ShowAchivementPopUp(achievement);
+        }
+    }
+    private void ShowAchivementPopUp(AchievementData achievement)
+    {
+        _popUpText.text = achievement.Title;
+        _popUpShowDurationCounter = _popUpShowDuration;
+        _popUpTransform.localScale = Vector2.right;
+        achievementSound.Play();
+    }
+}
+[System.Serializable] public class AchievementData
+{
+    public string Title;
+    public AchievementType Type;
+    public string Value;
+    public bool IsUnlocked;
+}
+public enum AchievementType
+{
+    UnlockResource
+}
